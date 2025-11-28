@@ -1,0 +1,65 @@
+﻿AppType=StandardJava
+Build1=Default,b4j.miniserver,server
+File1=index.html
+FileGroup1=Default Group
+Group=Default Group
+Library1=javaobject
+Library2=jcore
+Library3=jserver
+Library4=okhttp
+Module1=Index
+NumberOfFiles=1
+NumberOfLibraries=4
+NumberOfModules=1
+Version=10.3
+@EndOfDesignText@
+'Non-UI application (console application)
+#Region  Project Attributes 
+	#CommandLineArgs:
+	#MergeLibraries: true 
+#End Region
+
+Sub Process_Globals
+	Private srvr As Server
+	Public StaticFilesFolder As String
+	Public GeminiApiKey As String
+End Sub
+
+' <link>Click to browse|http://127.0.0.1:8080/</link>
+Sub AppStart (Args() As String)
+	srvr.Initialize("srvr")
+	'srvr.Port = 8080 ' default
+	srvr.StaticFilesFolder = File.Combine(File.DirApp, "www")
+	srvr.LogsFileFolder = File.Combine(File.DirApp, "logs")
+	srvr.AddHandler("", "Index", False)
+	srvr.AddHandler("/*", "Index", False)
+	srvr.Start
+	StaticFilesFolder = srvr.StaticFilesFolder
+	DateTime.DateFormat = "yyyy-MM-dd_HHmmss"
+	If File.Exists(File.DirApp, "env.txt") = False Then
+		File.WriteMap(File.DirApp, "env.txt", CreateMap("GEMINI_API_KEY": "AIzaxxxxxxxxxxxxxxxxxxxxxxx"))
+	End If
+	' REMEMBER DON'T SHARE YOUR API KEY!!!
+	Dim env As Map = File.ReadMap(File.DirApp, "env.txt")
+	GeminiApiKey = env.Get("GEMINI_API_KEY")
+	Log("Server started")
+	StartMessageLoop
+End Sub
+
+'prints the requests parameters
+Public Sub PrintAllParameters (req As ServletRequest) As String
+	Dim sb As StringBuilder
+	sb.Initialize
+	sb.Append("<ul>")
+	Dim params As Map = req.ParameterMap
+	For Each name As String In params.Keys
+		sb.Append("<li>").Append(name).Append(":")
+		Dim values() As String = params.Get(name)
+		For Each value As String In values
+			sb.Append(" ").Append(value)
+		Next
+		sb.Append("</li>")
+	Next
+	sb.Append("</ul>")
+	Return sb.ToString
+End Sub

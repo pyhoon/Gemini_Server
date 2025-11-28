@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Gemini Server</title>
+</head>
+    <div id="output">Send prompt</div>
+
+    <script>
+        // Connect to your B4J handler
+        const eventSource = new EventSource('/gemini?prompt=Tell me a story');
+
+        eventSource.onmessage = function (event) {
+            // 1. Parse the chunk from B4J
+            const data = JSON.parse(event.data);
+
+            // 2. Extract text (Gemini structure)
+            try {
+                const text = data.candidates[0].content.parts[0].text;
+
+                // 3. Append to div
+                document.getElementById("output").innerText += text;
+            } catch (e) {
+                // Sometimes Gemini sends metadata chunks without text
+            }
+        };
+
+        eventSource.onerror = function () {
+            eventSource.close();
+        };
+    </script>
+</body>
+
+</html>
