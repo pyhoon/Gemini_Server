@@ -18,24 +18,20 @@ Sub Handle (req As ServletRequest, resp As ServletResponse)
 	mreq = req
 	mresp = resp
 
-	If req.RequestURI = "/" Then
-		ShowIndex
-	Else
-		ShowIndex
-		CallApi
+	If mreq.RequestURI = "/" Then
+		Dim Content As String = File.ReadString(File.DirAssets, "index.html")
+		'Content = Content.Replace("$PARAMS$", Main.PrintAllParameters(mreq))
+	
+		mresp.ContentType = "text/html"
+		mresp.Write(Content)
+		'mresp.OutputStream.Close
+	Else If mreq.RequestURI.StartsWith("/gemini") Then
+		generate
 	End If
 End Sub
 
-Sub ShowIndex
-	Dim Content As String = File.ReadString(File.DirAssets, "index.html")
-	'Content = Content.Replace("$PARAMS$", Main.PrintAllParameters(mreq))
-	
-	mresp.ContentType = "text/html"	
-	mresp.Write(Content)
-End Sub
-
-Sub CallApi
-	' 1. Get the Prompt from the client request
+Sub generate
+    ' 1. Get the Prompt from the client request
     Dim Prompt As String = mreq.GetParameter("prompt")
     If Prompt = "" Then Prompt = "Write a long poem about coding in B4J."
     

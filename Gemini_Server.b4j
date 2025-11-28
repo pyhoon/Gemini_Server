@@ -7,9 +7,10 @@ Library1=javaobject
 Library2=jcore
 Library3=jserver
 Library4=okhttp
+Library5=json
 Module1=Index
 NumberOfFiles=1
-NumberOfLibraries=4
+NumberOfLibraries=5
 NumberOfModules=1
 Version=10.3
 @EndOfDesignText@
@@ -21,6 +22,7 @@ Version=10.3
 
 Sub Process_Globals
 	Private srvr As Server
+	Private hist as List
 	Public StaticFilesFolder As String
 	Public GeminiApiKey As String
 End Sub
@@ -34,6 +36,7 @@ Sub AppStart (Args() As String)
 	srvr.AddHandler("", "Index", False)
 	srvr.AddHandler("/*", "Index", False)
 	srvr.Start
+	hist.Initialize
 	StaticFilesFolder = srvr.StaticFilesFolder
 	DateTime.DateFormat = "yyyy-MM-dd_HHmmss"
 	If File.Exists(File.DirApp, "env.txt") = False Then
@@ -44,6 +47,35 @@ Sub AppStart (Args() As String)
 	GeminiApiKey = env.Get("GEMINI_API_KEY")
 	Log("Server started")
 	StartMessageLoop
+End Sub
+
+' Add this Sub to your Main Module or a dedicated B4J code module
+Public Sub PrepareHistoryJson (History As List, NewPrompt As String) As String
+    ' History should be stored as a List of Maps: 
+    ' [{"role":"user", "text":"Hi..."}, {"role":"model", "text":"Hello..."}]
+    
+    Dim ContentsList As List
+    ContentsList.Initialize
+    
+    ' 1. Add Past Turns (Alternating user/model)
+    For Each TurnMap As Map In History
+        Dim Part As Map = CreateMap("text": TurnMap.Get("text"))
+        Dim PartsList As List = Array(Part)
+        ' Create the { "role": "...", "parts": [...] } object
+        Dim ContentMap As Map = CreateMap("role": TurnMap.Get("role"), "parts": PartsList)
+        ContentsList.Add(ContentMap)
+    Next
+    
+    ' 2. Add the New Prompt (Always role: user)
+    Dim NewPart As Map = CreateMap("text": NewPrompt)
+    Dim NewPartsList As List = Array(NewPart)
+    Dim NewContentMap As Map = CreateMap("role": "user", "parts": NewPartsList)
+    ContentsList.Add(NewContentMap)
+    
+    ' Convert the final list of contents (which includes the history and new prompt) to a JSON string
+    Dim gen As JSONGenerator
+    gen.Initialize2(ContentsList)
+    Return gen.ToString
 End Sub
 
 'prints the requests parameters
