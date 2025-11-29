@@ -1,20 +1,21 @@
 ﻿AppType=StandardJava
-Build1=Default,b4j.miniserver,server
+Build1=Default,b4j.gemini.server
 File1=index.html
 FileGroup1=Default Group
 Group=Default Group
-Library1=javaobject
-Library2=jcore
+Library1=jcore
+Library2=jokhttputils2
 Library3=jserver
-Library4=okhttp
-Library5=json
-Module1=Index
+Library4=json
+Module1=GeminiHandler
+Module2=Index
 NumberOfFiles=1
-NumberOfLibraries=5
-NumberOfModules=1
+NumberOfLibraries=4
+NumberOfModules=2
 Version=10.3
 @EndOfDesignText@
 'Non-UI application (console application)
+' With help from DeepSeek
 #Region  Project Attributes 
 	#CommandLineArgs:
 	#MergeLibraries: true 
@@ -22,76 +23,35 @@ Version=10.3
 
 Sub Process_Globals
 	Private srvr As Server
-	Private hist as List
 	Public StaticFilesFolder As String
-	Public GeminiApiKey As String
+	Public API_URL As String
+	'Public USER_AGENT As String = "B4J-Gemini-Client/1.0"
+	Public GEMINI_API_KEY As String
+    Public GEMINI_MODEL As String = "gemini-2.5-flash"
+    'Public GEMINI_MODEL As String = "gemini-3-pro-preview"
 End Sub
 
-' <link>Click to browse|http://127.0.0.1:8080/</link>
+' <link>Click to browse|http://127.0.0.1:51042/</link>
 Sub AppStart (Args() As String)
 	srvr.Initialize("srvr")
-	'srvr.Port = 8080 ' default
+	srvr.Port = 51042 ' default
 	srvr.StaticFilesFolder = File.Combine(File.DirApp, "www")
 	srvr.LogsFileFolder = File.Combine(File.DirApp, "logs")
 	srvr.AddHandler("", "Index", False)
-	srvr.AddHandler("/*", "Index", False)
+	srvr.AddHandler("/gemini", "GeminiHandler", False)
 	srvr.Start
-	hist.Initialize
-	StaticFilesFolder = srvr.StaticFilesFolder
-	DateTime.DateFormat = "yyyy-MM-dd_HHmmss"
+	'DateTime.DateFormat = "yyyy-MM-dd_HHmmss"
 	If File.Exists(File.DirApp, "env.txt") = False Then
-		File.WriteMap(File.DirApp, "env.txt", CreateMap("GEMINI_API_KEY": "AIzaxxxxxxxxxxxxxxxxxxxxxxx"))
+		File.WriteMap(File.DirApp, "env.txt", CreateMap("GEMINI_API_KEY": "YOUR_API_KEY_HERE"))
+		LogColor("Please set your Gemini API key in env.txt", -65536)
+		Return
 	End If
-	' REMEMBER DON'T SHARE YOUR API KEY!!!
 	Dim env As Map = File.ReadMap(File.DirApp, "env.txt")
-	GeminiApiKey = env.Get("GEMINI_API_KEY")
+	GEMINI_API_KEY = env.Get("GEMINI_API_KEY")
+	If GEMINI_API_KEY = "" Or GEMINI_API_KEY = "YOUR_API_KEY_HERE" Then
+		LogColor("Please set your Gemini API key in env.txt", -65536)
+		Return
+	End If	
 	Log("Server started")
 	StartMessageLoop
-End Sub
-
-' Add this Sub to your Main Module or a dedicated B4J code module
-Public Sub PrepareHistoryJson (History As List, NewPrompt As String) As String
-    ' History should be stored as a List of Maps: 
-    ' [{"role":"user", "text":"Hi..."}, {"role":"model", "text":"Hello..."}]
-    
-    Dim ContentsList As List
-    ContentsList.Initialize
-    
-    ' 1. Add Past Turns (Alternating user/model)
-    For Each TurnMap As Map In History
-        Dim Part As Map = CreateMap("text": TurnMap.Get("text"))
-        Dim PartsList As List = Array(Part)
-        ' Create the { "role": "...", "parts": [...] } object
-        Dim ContentMap As Map = CreateMap("role": TurnMap.Get("role"), "parts": PartsList)
-        ContentsList.Add(ContentMap)
-    Next
-    
-    ' 2. Add the New Prompt (Always role: user)
-    Dim NewPart As Map = CreateMap("text": NewPrompt)
-    Dim NewPartsList As List = Array(NewPart)
-    Dim NewContentMap As Map = CreateMap("role": "user", "parts": NewPartsList)
-    ContentsList.Add(NewContentMap)
-    
-    ' Convert the final list of contents (which includes the history and new prompt) to a JSON string
-    Dim gen As JSONGenerator
-    gen.Initialize2(ContentsList)
-    Return gen.ToString
-End Sub
-
-'prints the requests parameters
-Public Sub PrintAllParameters (req As ServletRequest) As String
-	Dim sb As StringBuilder
-	sb.Initialize
-	sb.Append("<ul>")
-	Dim params As Map = req.ParameterMap
-	For Each name As String In params.Keys
-		sb.Append("<li>").Append(name).Append(":")
-		Dim values() As String = params.Get(name)
-		For Each value As String In values
-			sb.Append(" ").Append(value)
-		Next
-		sb.Append("</li>")
-	Next
-	sb.Append("</ul>")
-	Return sb.ToString
 End Sub
