@@ -27,7 +27,7 @@ Sub Process_Globals
 	Public API_URL As String
 	'Public USER_AGENT As String = "B4J-Gemini-Client/1.0"
 	Public GEMINI_API_KEY As String
-    Public GEMINI_MODEL As String = "gemini-2.5-flash"
+    Public GEMINI_MODEL As String = "gemini-2.5-pro"
     'Public GEMINI_MODEL As String = "gemini-3-pro-preview"
 End Sub
 

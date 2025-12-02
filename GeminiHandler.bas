@@ -14,7 +14,7 @@ End Sub
 
 Sub Handle (req As ServletRequest, resp As ServletResponse)
     HandleGemini(req, resp)
-	StartMessageLoop
+	'StartMessageLoop
 End Sub
 
 Sub HandleGemini (req As ServletRequest, resp As ServletResponse)
@@ -51,23 +51,23 @@ Sub HandleGemini (req As ServletRequest, resp As ServletResponse)
 		LogColor(Main.API_URL, -16776961)
 		
 		' Create Gemini request
-		Dim geminiReq As Map = CreateMap( _
-	        "contents": Array(CreateMap( _
-	            "parts": Array(CreateMap( _
-	                "text": prompt _
-	            )) _
-	        )), _
-	        "generationConfig": CreateMap( _
-	            "maxOutputTokens": 1024, _
-	            "temperature": 0.7 _
-	        ) _
-	    )
 		'Dim geminiReq As Map = CreateMap( _
-		'            "contents": Array(CreateMap( _
-		'                "parts": Array(CreateMap( _
-		'                    "text": prompt _
-		'                )) _
-		'            )))
+		'    "contents": Array(CreateMap( _
+		'        "parts": Array(CreateMap( _
+		'            "text": prompt _
+		'        )) _
+		'    )), _
+		'    "generationConfig": CreateMap( _
+		'        "maxOutputTokens": 1024, _
+		'        "temperature": 0.7 _
+		'    ) _
+		')
+		Dim geminiReq As Map = CreateMap( _
+		            "contents": Array(CreateMap( _
+		                "parts": Array(CreateMap( _
+		                    "text": prompt _
+		                )) _
+		            )))
 			
 		Dim requestJson As String = geminiReq.As(JSON).ToString
 		Log("Sending streaming request to Gemini API")
@@ -82,7 +82,7 @@ Sub HandleGemini (req As ServletRequest, resp As ServletResponse)
 		Wait For (j) JobDone(j As HttpJob)
 		If j.Success Then
 			Dim response As String = j.GetString
-			'LogColor(response, -16776961)
+			LogColor(response, -16776961)
 			Log("Gemini API call successful, response length: " & response.Length)
 			
 			If response = "" Or response = "null" Then
@@ -137,7 +137,7 @@ Sub HandleGemini (req As ServletRequest, resp As ServletResponse)
 		End Try
 	End Try
 	j.Release
-	StopMessageLoop
+	'StopMessageLoop
 End Sub
 
 Sub ProcessCandidates (resp As ServletResponse, candidates As List)
