@@ -14,7 +14,7 @@ End Sub
 
 Sub Handle (req As ServletRequest, resp As ServletResponse)
     HandleGemini(req, resp)
-	'StartMessageLoop
+	StartMessageLoop
 End Sub
 
 Sub HandleGemini (req As ServletRequest, resp As ServletResponse)
@@ -63,11 +63,11 @@ Sub HandleGemini (req As ServletRequest, resp As ServletResponse)
 		'    ) _
 		')
 		Dim geminiReq As Map = CreateMap( _
-		            "contents": Array(CreateMap( _
-		                "parts": Array(CreateMap( _
-		                    "text": prompt _
-		                )) _
-		            )))
+        "contents": Array(CreateMap( _
+            "parts": Array(CreateMap( _
+                "text": prompt _
+            )) _
+        )))
 			
 		Dim requestJson As String = geminiReq.As(JSON).ToString
 		Log("Sending streaming request to Gemini API")
@@ -137,7 +137,7 @@ Sub HandleGemini (req As ServletRequest, resp As ServletResponse)
 		End Try
 	End Try
 	j.Release
-	'StopMessageLoop
+	StopMessageLoop
 End Sub
 
 Sub ProcessCandidates (resp As ServletResponse, candidates As List)
@@ -171,42 +171,31 @@ Sub SendChunk (resp As ServletResponse, content As String)
 		' Build proper SSE with event type
 		Dim sseBuilder As StringBuilder
 		sseBuilder.Initialize
-        
+		
 		' Add event type
 		If content = "[DONE]" Then
-			sseBuilder.Append("event: ").Append("complete").Append(NewLine)
+			sseBuilder.Append("event: ").Append("complete")
+			sseBuilder.Append(NewLine)
 			Dim data As Map = CreateMap("status": "complete")
 		Else
-			sseBuilder.Append("event: ").Append("message").Append(NewLine)
+			sseBuilder.Append("event: ").Append("message")
+			sseBuilder.Append(NewLine)
 			Dim data As Map = CreateMap("content": content)
 		End If
-        
+		
 		' Add data
-		sseBuilder.Append("data: ").Append(data.As(JSON).ToCompactString).Append(NewLine)
-        
+		sseBuilder.Append("data: ").Append(data.As(JSON).ToCompactString)
+		sseBuilder.Append(NewLine)
+		
 		' End of event
 		sseBuilder.Append(NewLine)
-        
-		Dim sseData As String = sseBuilder.ToString
-		'Dim bytes() As Byte = sseData.GetBytes("UTF8")
-        
-		' DEBUG: Log what we're sending
-		'LogColor("SSE Event - Type: " & eventType & ", Data: " & jsonGen.ToString, Colors.Magenta)
-        
-		'out.WriteBytes(bytes, 0, bytes.Length)
-		'out.Flush
 		
-		'If content = "[DONE]" Then
-		'	Dim data As Map = CreateMap("status": "complete")
-		'Else
-		'	Dim data As Map = CreateMap("content": content)
-		'End If
-
-		'Dim sseData As String = "data: " & data.As(JSON).ToString & NewLine & NewLine
-
-		Log(sseData)
-		resp.Write(sseData)
-		'resp.OutputStream.Flush
+		Dim sseData As String = sseBuilder.ToString
+		Dim out As OutputStream = resp.OutputStream
+		Dim bytes() As Byte = sseData.GetBytes("UTF8")
+		
+		out.WriteBytes(bytes, 0, bytes.Length)
+		out.Flush
 	Catch
 		If LastException.Message.Contains("EofException") Or LastException.Message.Contains("Closed") Then
 			Log("Client disconnected during streaming")
@@ -225,20 +214,22 @@ Sub SendError (resp As ServletResponse, errorMessage As String)
 		sseBuilder.Initialize
         
 		' Add event type
-		sseBuilder.Append("event: ").Append("error").Append(NewLine)
-
+		sseBuilder.Append("event: ").Append("error")
+		sseBuilder.Append(NewLine)
+		
 		' Add data
 		Dim errorData As Map = CreateMap("error": errorMessage)
-		sseBuilder.Append("data: ").Append(errorData.As(JSON).ToCompactString).Append(NewLine)
-        
+		sseBuilder.Append("data: ").Append(errorData.As(JSON).ToCompactString)
+		sseBuilder.Append(NewLine)
+		
 		' End of event
 		sseBuilder.Append(NewLine)
 		
 		Dim sseError As String = sseBuilder.ToString
-        'Dim sseError As String = "data: " & errorData.As(JSON).ToString & NewLine & NewLine
-        'Dim sseError As String = "data: " & errorData.As(JSON).ToString & NewLine & NewLine
-        resp.Write(sseError)
-        'resp.OutputStream.Flush
+		Dim out As OutputStream = resp.OutputStream
+		Dim bytes() As Byte = sseError.GetBytes("UTF8")
+		out.WriteBytes(bytes, 0, bytes.Length)
+		out.Flush
     Catch
         LogColor("Error sending error message: " & LastException.Message, -65536)
     End Try

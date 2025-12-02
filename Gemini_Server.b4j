@@ -1,7 +1,5 @@
 ﻿AppType=StandardJava
 Build1=Default,b4j.gemini.server
-File1=index.html
-FileGroup1=Default Group
 Group=Default Group
 Library1=jcore
 Library2=jokhttputils2
@@ -9,7 +7,7 @@ Library3=jserver
 Library4=json
 Module1=GeminiHandler
 Module2=Index
-NumberOfFiles=1
+NumberOfFiles=0
 NumberOfLibraries=4
 NumberOfModules=2
 Version=10.3
@@ -22,7 +20,7 @@ Version=10.3
 #End Region
 
 Sub Process_Globals
-	Private srvr As Server
+	Public srvr As Server
 	Public StaticFilesFolder As String
 	Public API_URL As String
 	'Public USER_AGENT As String = "B4J-Gemini-Client/1.0"

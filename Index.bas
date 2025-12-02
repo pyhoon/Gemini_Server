@@ -18,7 +18,7 @@ Sub Handle (req As ServletRequest, resp As ServletResponse)
 	mresp = resp
     If mreq.RequestURI = "/" Then
         ' Serve the main chat page (index.html, which is in Assets)
-        mresp.Write(File.ReadString(File.DirAssets, "index.html"))
+        mresp.Write(File.ReadString(Main.srvr.StaticFilesFolder, "index.html"))
     Else
         mresp.SendError(404, "Not Found")
     End If
